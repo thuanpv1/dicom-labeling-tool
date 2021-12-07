@@ -1,7 +1,52 @@
 import streamlit as st
 from src.utils import *
 import gc
+import numpy as np
+from PIL import Image as im
+from datetime import datetime
 
+# define a main function
+def convertNdarrayToImage(array, axial_threshold):
+  
+    # create a numpy array from scratch
+    # using arange function.
+    # 1024x720 = 737280 is the amount 
+    # of pixels.
+    # np.uint8 is a data type containing
+    # numbers ranging from 0 to 255 
+    # and no non-negative integers
+    # array = np.arange(0, 737280, 1, np.uint8)
+      
+    # check type of array
+    print(type(array))
+      
+    # our array will be of width 
+    # 737280 pixels That means it 
+    # will be a long dark line
+    print(array.shape)
+      
+    # Reshape the array into a 
+    # familiar resoluition
+    # array = np.reshape(array, (1024, 720))
+      
+    # show the shape of the array
+    # print(array.shape)
+  
+    # show the array
+    # print(array)
+      
+    # creating image object of
+    # above array
+    # array *= (255.0/array.max())
+    array *= 255
+    data = im.fromarray(array)
+    print(data)
+    # saving the final output 
+    # as a PNG file
+    now = datetime.now() # current date and time
+    date_time = now.strftime("%m-%d-%Y-%H-%M-%S")
+    data.convert('RGB').save('image' + date_time + str(axial_threshold) + '.png')
+    return 'image' + date_time + str(axial_threshold) + '.png'
 # Hide FileUploader deprecation
 st.set_option('deprecation.showfileUploaderEncoding', False)
 
@@ -100,7 +145,7 @@ if __name__ == "__main__":
             state.last_serie = selected_serie
 
         img3d, info = processing_data(state['valid_folders'][series_names.index(selected_serie)] + '/')
-            
+        print('img3d shape===', img3d.shape)
         if display_info:
             st.dataframe(info)
         
@@ -116,11 +161,21 @@ if __name__ == "__main__":
             axial_max = int(img3d[:, :, axial_slider].max())
             axial_threshold = st.slider(
                 'Axial Color Threshold',
-                0, 100, 50
+                -axial_max, axial_max, 0
             )
-            axial_threshold = axial_max * ((2 * axial_threshold / 100) - 1)
-            st.image(normalize_image(filter_image(axial_threshold, img3d[:, :, axial_slider])),
-                                            caption='Slice {}'.format(axial_slider), width=width)
+            # axial_threshold = axial_max * ((2 * axial_threshold / 100) - 1)
+            test = (filter_image(axial_threshold, img3d[:, :, axial_slider]))
+            print('axial_max===', axial_max)
+            print('axial_threshold===', axial_threshold)
+            print('axial_slider===', axial_slider)
+            print('test===', test[0][0])
+            # test = img3d[:, :, axial_slider]
+            # lists = test.tolist()
+            # json_str = json.dumps(lists)
+            # print(json_str)
+            png = convertNdarrayToImage(normalize_image(test), axial_threshold)
+            st.image(normalize_image(test),
+                                            caption='Slice {}'.format(axial_slider), width=width, output_format='png')
 
         if 'Coronal' in options:
             coronal_slider = st.slider(

@@ -275,6 +275,9 @@ def read_DICOM_slices(path):
 
     del files, slices, columns, col_dict
 
+    lists = img3d.tolist()
+    json_str = json.dumps(lists)
+    # print(json_str)
     return img3d, df
 
 class SessionState:
